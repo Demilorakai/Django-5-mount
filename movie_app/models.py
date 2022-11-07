@@ -12,7 +12,7 @@ class Movie(models.Model):
     title = models.TextField(max_length=100)
     description = models.CharField(max_length=250)
     duration = models.IntegerField()
-    director = models.ForeignKey(Director, on_delete=models.CASCADE, null=True)
+    director = models.ForeignKey(Director, on_delete=models.CASCADE, null=True, related_name='movies')
 
     def __str__(self):
         return self.title
@@ -26,20 +26,19 @@ class Movie(models.Model):
 
     @property
     def filter_reviews(self):
-        #return self.reviews.filter(stars__gt=3)
      return self.reviews.filter(stars__in=[4, 5])
 
     @property
     def rating(self):
-        reviews = self.filter_reviews
-        count = reviews.count()
-        sum_ = 0
-        for i in reviews:
-            sum_+= i.stars
-        try:
-          return sum_ / count
-        except ZeroDivisionError:
+        total_amount = self.reviews.all().count()
+        if total_amount == 0:
             return 0
+        sum_ = 0
+        for i in self.reviews.all():
+            sum_ += i.stars
+        return sum_ / total_amount
+
+
 
 
 STARS = (
@@ -54,7 +53,7 @@ STARS = (
 class Review(models.Model):
     text = models.CharField(max_length=280)
     stars = models.IntegerField(default=5, choices=STARS)
-    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, related_name='reviews')
+    movie = models.ForeignKey(Movie, on_delete=models.CASCADE, null=True, related_name='reviews')
 
     def __str__(self):
         return self.text
